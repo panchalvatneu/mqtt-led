@@ -5,9 +5,10 @@
             "platform.stdio-baud-rate": 115200,
             "target.components_add": ["emw3080b"],
             "target.network-default-interface-type": "WIFI",
-            "nsapi.default-wifi-ssid": "\"viot\"",
-            "nsapi.default-wifi-password": "\"gyllenveer\"",
-            "nsapi.default-wifi-security": "WPA_WPA2"
+            "nsapi.default-wifi-ssid": "\"iot-2g\"",
+            "nsapi.default-wifi-password": "\"asdf@1234\"",
+            "nsapi.default-wifi-security": "WPA_WPA2",
+            "rtos.main-thread-stack-size": 32768
         }
     }
 
