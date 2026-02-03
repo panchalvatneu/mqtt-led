@@ -10,35 +10,46 @@ const OPTIONS = {
 
 const TOPIC = 'led/control';
 
-let ledState = 0; // assume device starts OFF
 
 const client = mqtt.connect(BROKER_URL, OPTIONS);
 
 client.on('connect', () => {
   console.log('Connected to HiveMQ Cloud');
-  updateButton();
 });
 
 client.on('error', (err) => {
   console.error('MQTT error', err);
 });
 
-const button = document.getElementById('toggleBtn');
+const slider = document.getElementById("slider");
+const valueEl = document.getElementById("value");
 
-function updateButton() {
-  button.textContent = ledState === 0 ? 'Turn ON' : 'Turn OFF';
+// ---------- helpers ----------
+function updateSliderUI(value) {
+  valueEl.textContent = value;
+
+  const percent = (value / slider.max) * 100;
+  slider.style.background =
+    `linear-gradient(to right, #38bdf8 ${percent}%, #334155 ${percent}%)`;
 }
 
-button.addEventListener('click', () => {
-  // toggle desired state
-  ledState = ledState === 0 ? 1 : 0;
+function publishBrightness(value) {
+  const payload = {
+    cmd: "led",
+    level: Number(value)
+  };
 
-  const payload = JSON.stringify({
-    cmd: 'led',
-    state: ledState
-  });
+  client.publish(
+    TOPIC,
+    JSON.stringify(payload)
+  );
+}
 
-  client.publish(TOPIC, payload, { qos: 0 });
 
-  updateButton();
+slider.addEventListener("input", (e) => {
+  const value = Number(e.target.value);
+  updateSliderUI(value);
+  publishBrightness(value);
 });
+
+updateSliderUI(slider.value);
