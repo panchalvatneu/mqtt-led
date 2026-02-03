@@ -15,44 +15,34 @@ const char* MQTT_USERNAME = "stm32";
 const char* MQTT_PASSWORD = "Virajstm32";
 const char* MQTT_TOPIC = "led/control";
 
-DigitalOut led(LED1);
+PwmOut led(LED1);
 
 void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message& msg = md.message;
 
-    // 1. Copy payload into fixed buffer
     static char payload[64];
-
-    if (msg.payloadlen >= sizeof(payload)) {
-        return; // payload too large → ignore
-    }
+    if (msg.payloadlen >= sizeof(payload)) return;
 
     memcpy(payload, msg.payload, msg.payloadlen);
-    payload[msg.payloadlen] = '\0'; 
+    payload[msg.payloadlen] = '\0';
 
-    // 2. Parse JSON (fixed schema)
     ArduinoJson::StaticJsonDocument<64> doc;
-    DeserializationError err = deserializeJson(doc, payload);
+    if (deserializeJson(doc, payload)) return;
 
-    if (err) {
-        return; // invalid JSON
-    }
-
-    // 3. Validate fields
     const char* cmd = doc["cmd"];
-    int state = doc["state"];
+    if (!cmd || strcmp(cmd, "led") != 0) return;
 
-    if (!cmd) return;
-    if (strcmp(cmd, "led") != 0) return;
-    if (state != 0 && state != 1) return;
+    int level = doc["level"];
+    if (level < 0 || level > 255) return;
 
-    // 4. Act
-    led = state;
+    // Map 0–255 → 0.0–1.0
+    led.write(level / 255.0f);
 }
 
 
 int main() {
+    led.period_ms(1);   // 1 kHz PWM
 
 
     WiFiInterface* wifi = WiFiInterface::get_default_instance();
